@@ -155,10 +155,34 @@ function promptForLeaderboard() {
 
 // Save the score to the leaderboard
 function saveScore(playerName, score) {
-    const leaderboard = document.getElementById("scoreList");
-    const newScore = document.createElement("li");
-    newScore.textContent = `${playerName}: ${score} seconds`;
-    leaderboard.appendChild(newScore);
+    const leaderboardRef = database.ref('leaderboard');
+    
+    leaderboardRef.push({
+        name: playerName,
+        score: score,
+        timestamp: Date.now() // To sort scores later
+    });
+}
+
+// Load the leaderboard from Firebase
+function loadLeaderboard() {
+    const leaderboardRef = database.ref('leaderboard');
+
+    leaderboardRef.orderByChild('score').limitToLast(10).once('value', function(snapshot) {
+        const leaderboardList = document.getElementById('scoreList');
+        leaderboardList.innerHTML = ''; // Clear existing leaderboard
+
+        snapshot.forEach(function(childSnapshot) {
+            const scoreData = childSnapshot.val();
+            const listItem = document.createElement('li');
+            listItem.textContent = `${scoreData.name}: ${scoreData.score} seconds`;
+            leaderboardList.appendChild(listItem);
+        });
+    });
+}
+
+window.onload = function() {
+    loadLeaderboard();  // Load leaderboard when the page loads
 }
 
 // Reset the game

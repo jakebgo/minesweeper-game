@@ -4,20 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minesweeper</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="minesweeper">
-        <div id="board"></div>
+        <div id="board"></div> <!-- The game board -->
         <div id="info">
             <p>Time: <span id="timer">0</span> seconds</p>
             <button id="reset">Reset</button>
         </div>
     </div>
-    <div id="leaderboard">
-        <h2>Leaderboard</h2>
-        <ul id="scoreList"></ul>
-    </div>
+
+    <div id="completionMessage"></div> <!-- For displaying completion message -->
+    
+    <h2>Leaderboard</h2>
+    <ul id="scoreList"></ul> <!-- Leaderboard display -->
+
+    <!-- Firebase initialization script -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", // Replace with your actual Firebase API key
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your actual Firebase project ID
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com", // Replace with your Firebase database URL
+            projectId: "YOUR_PROJECT_ID", // Replace with your Firebase project ID
+            storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your Firebase storage bucket
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Firebase messaging sender ID
+            appId: "YOUR_APP_ID", // Replace with your Firebase app ID
+            measurementId: "YOUR_MEASUREMENT_ID" // Replace with your Firebase measurement ID (optional)
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+
     <script src="script.js"></script>
 </body>
 </html>
+
