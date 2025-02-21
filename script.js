@@ -1,3 +1,23 @@
+// Import Firebase modules (correct modular SDK import for v9+)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
+import { getDatabase, ref, push, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
+
+// Firebase configuration (replace with your actual configuration)
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID",
+    measurementId: "YOUR_MEASUREMENT_ID"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);  // Initialize the Firebase app
+const database = getDatabase(app);  // Get the Firebase Realtime Database instance
+
 const boardSize = 10; // 10x10 grid
 const numBombs = 20;
 let board = [];
@@ -155,9 +175,9 @@ function promptForLeaderboard() {
 
 // Save the score to the leaderboard
 function saveScore(playerName, score) {
-    const leaderboardRef = database.ref('leaderboard');
+    const leaderboardRef = ref(database, 'leaderboard'); // Reference to leaderboard in Firebase
     
-    leaderboardRef.push({
+    push(leaderboardRef, {
         name: playerName,
         score: score,
         timestamp: Date.now() // To sort scores later
@@ -166,9 +186,11 @@ function saveScore(playerName, score) {
 
 // Load the leaderboard from Firebase
 function loadLeaderboard() {
-    const leaderboardRef = database.ref('leaderboard');
+    const leaderboardRef = ref(database, 'leaderboard'); // Reference to leaderboard in Firebase
 
-    leaderboardRef.orderByChild('score').limitToLast(10).once('value', function(snapshot) {
+    const leaderboardQuery = query(leaderboardRef, orderByChild('score'), limitToLast(10));
+
+    get(leaderboardQuery).then((snapshot) => {
         const leaderboardList = document.getElementById('scoreList');
         leaderboardList.innerHTML = ''; // Clear existing leaderboard
 
@@ -178,6 +200,8 @@ function loadLeaderboard() {
             listItem.textContent = `${scoreData.name}: ${scoreData.score} seconds`;
             leaderboardList.appendChild(listItem);
         });
+    }).catch((error) => {
+        console.error("Error loading leaderboard: ", error);
     });
 }
 
