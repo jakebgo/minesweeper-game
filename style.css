@@ -7,23 +7,21 @@
 .cell {
     width: 30px;
     height: 30px;
-    background-color: lightgray;
+    background-color: lightgray; /* Unclicked cells */
     border: 1px solid #ccc;
     text-align: center;
     line-height: 30px;
     cursor: pointer;
     user-select: none;
+    transition: background-color 0.3s ease; /* Smooth transition for hover and click effects */
 }
 
 .cell.revealed {
-    background-color: white;
+    background-color: #d0d0d0; /* Darker shade for revealed cells */
+    cursor: default;
 }
 
-.bomb {
-    background-color: red;
-    color: white;
-}
-
-.cell.revealed {
-    background-color: white;
+/* Optional: add a hover effect to make it more interactive */
+.cell:hover {
+    background-color: #b3b3b3;
 }

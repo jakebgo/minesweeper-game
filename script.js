@@ -1,30 +1,14 @@
 const boardSize = 10; // 10x10 grid
-const numBombs = 20;
+const numBombs = 20; // Number of bombs
 let board = [];
 let gameOver = false;
 let timerInterval;
 let seconds = 0;
 let timerStarted = false; // Flag to check if timer has started
 
-// Start the timer
-function startTimer() {
-    timerInterval = setInterval(() => {
-        seconds++;
-        document.getElementById("timer").innerText = seconds;
-    }, 1000);
-}
-
-// Stop the timer
-function stopTimer() {
-    clearInterval(timerInterval);
-}
-
 // Initialize the board
 function initializeBoard() {
     console.log("Initializing board...");
-    seconds = 0;  // Reset the timer to 0 when a new game starts
-    document.getElementById("timer").innerText = seconds;  // Show 0 on the timer initially
-    gameOver = false;
     board = [];
     for (let i = 0; i < boardSize; i++) {
         board[i] = [];
@@ -32,9 +16,9 @@ function initializeBoard() {
             board[i][j] = { isBomb: false, isRevealed: false, neighborBombs: 0 };
         }
     }
-    placeBombs();
-    calculateNeighbors();
-    renderBoard();
+    placeBombs(); // Place bombs on the board
+    calculateNeighbors(); // Calculate neighboring bombs
+    renderBoard(); // Render the board after initialization
 }
 
 // Place bombs randomly on the board
@@ -54,7 +38,7 @@ function placeBombs() {
 function calculateNeighbors() {
     for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
-            if (board[i][j].isBomb) continue;
+            if (board[i][j].isBomb) continue; // Skip bombs
             let bombsCount = 0;
             for (let x = -1; x <= 1; x++) {
                 for (let y = -1; y <= 1; y++) {
@@ -74,8 +58,8 @@ function calculateNeighbors() {
 function renderBoard() {
     const boardElement = document.getElementById("board");
     boardElement.innerHTML = ""; // Clear any existing content
-    boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 30px)`; // Ensure grid size is dynamic based on boardSize
-    boardElement.style.gridTemplateRows = `repeat(${boardSize}, 30px)`; // Ensure grid size is dynamic based on boardSize
+    boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 30px)`; // Set grid layout
+    boardElement.style.gridTemplateRows = `repeat(${boardSize}, 30px)`; // Set grid layout
 
     // Loop through the board and create cells
     for (let i = 0; i < boardSize; i++) {
@@ -85,7 +69,7 @@ function renderBoard() {
             cell.dataset.row = i;
             cell.dataset.col = j;
 
-            // If the cell is revealed, show bomb or neighbor count
+            // If the cell is revealed, change color
             if (board[i][j].isRevealed) {
                 if (board[i][j].isBomb) {
                     cell.classList.add("bomb");
@@ -93,9 +77,12 @@ function renderBoard() {
                 } else {
                     cell.innerText = board[i][j].neighborBombs > 0 ? board[i][j].neighborBombs : "";
                 }
+                cell.classList.add("revealed");
             }
 
+            // Add click event listener to each cell
             cell.addEventListener("click", revealCell);
+
             boardElement.appendChild(cell);
         }
     }
@@ -105,97 +92,76 @@ function renderBoard() {
 function revealCell(event) {
     if (gameOver) return;
 
-    // Start the timer on the first click
-    if (!timerStarted) {
-        startTimer();
-        timerStarted = true;
-    }
-
     const row = event.target.dataset.row;
     const col = event.target.dataset.col;
 
-    if (board[row][col].isRevealed) return; // Prevent revealing already revealed cells
+    // If the cell is already revealed, do nothing
+    if (board[row][col].isRevealed) return;
 
+    // Mark the cell as revealed
     board[row][col].isRevealed = true;
 
-    // If a bomb is clicked, end the game
+    // Start the timer on the first click
+    if (!timerStarted) {
+        startTimer(); // Start the timer
+        timerStarted = true; // Ensure the timer only starts once
+    }
+
+    // If the cell is a bomb, end the game
     if (board[row][col].isBomb) {
         gameOver = true;
-        stopTimer();
+        stopTimer(); // Stop the timer when the game ends
         alert("Game Over! You hit a bomb!");
-        renderBoard();
+        renderBoard(); // Render the board after game over
         return;
     }
 
-    renderBoard();
-
-    // Check if the player has completed the game
-    if (checkGameCompletion()) {
-        gameOver = true;
-        stopTimer();  // Stop the timer when the game ends successfully
-        document.getElementById("completionMessage").innerText = "Congratulations! You completed the game!";
-        alert("You completed the game!");
-        promptForLeaderboard();  // Save the score to the leaderboard
+    // If there are no neighboring bombs, reveal neighboring cells recursively
+    if (board[row][col].neighborBombs === 0) {
+        revealNeighbors(row, col); // Reveal adjacent cells if no bombs around
     }
+
+    renderBoard(); // Re-render the board after revealing the cell
 }
 
-// Function to check if the game is completed (all non-bomb cells revealed)
-function checkGameCompletion() {
-    for (let i = 0; i < boardSize; i++) {
-        for (let j = 0; j < boardSize; j++) {
-            if (!board[i][j].isBomb && !board[i][j].isRevealed) {
-                return false; // The game is not complete if there's any unrevealed non-bomb cell
+// Recursively reveal neighboring cells
+function revealNeighbors(row, col) {
+    for (let x = -1; x <= 1; x++) {
+        for (let y = -1; y <= 1; y++) {
+            let newRow = row + x;
+            let newCol = col + y;
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                if (!board[newRow][newCol].isRevealed) {
+                    board[newRow][newCol].isRevealed = true;
+                    if (board[newRow][newCol].neighborBombs === 0) {
+                        revealNeighbors(newRow, newCol); // Recursively reveal neighbors if no bombs are adjacent
+                    }
+                }
             }
         }
     }
-    return true; // All non-bomb cells are revealed, game is complete
 }
 
-// Prompt for name and save score to leaderboard
-function promptForLeaderboard() {
-    const playerName = prompt("Congratulations! Enter your name to save your score:");
-    if (playerName) {
-        saveScore(playerName, seconds);  // Save score with player name and time
-    }
+// Timer logic
+function startTimer() {
+    timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById("timer").innerText = seconds;
+    }, 1000);
 }
 
-// Save the score to Firebase
-function saveScore(playerName, score) {
-    const leaderboardRef = database.ref('leaderboard'); // Reference to leaderboard in Firebase
-    
-    leaderboardRef.push({
-        name: playerName,
-        score: score,
-        timestamp: Date.now() // To sort scores later
-    });
-}
-
-// Load the leaderboard from Firebase
-function loadLeaderboard() {
-    const leaderboardRef = database.ref('leaderboard'); // Reference to leaderboard in Firebase
-
-    leaderboardRef.orderByChild('score').limitToLast(10).once('value', function(snapshot) {
-        const leaderboardList = document.getElementById('scoreList');
-        leaderboardList.innerHTML = ''; // Clear existing leaderboard
-
-        snapshot.forEach(function(childSnapshot) {
-            const scoreData = childSnapshot.val();
-            const listItem = document.createElement('li');
-            listItem.textContent = `${scoreData.name}: ${scoreData.score} seconds`;
-            leaderboardList.appendChild(listItem);
-        });
-    });
-}
-
-window.onload = function() {
-    loadLeaderboard();  // Load leaderboard when the page loads
+// Stop the timer
+function stopTimer() {
+    clearInterval(timerInterval);
 }
 
 // Reset the game
 document.getElementById("reset").addEventListener("click", () => {
     gameOver = false;
     timerStarted = false; // Reset the timer flag for the new game
-    initializeBoard();
+    seconds = 0;  // Reset the timer to 0
+    document.getElementById("timer").innerText = seconds;  // Update the timer display
+    initializeBoard(); // Reinitialize the board
 });
 
 // Initialize the game
