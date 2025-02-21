@@ -1,0 +1,43 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+#minesweeper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 2px;
+}
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+}
+
+#leaderboard {
+    margin-top: 20px;
+}
+.cell {
+    width: 30px;
+    height: 30px;
+    background-color: lightgray;
+    display: inline-block;
+    text-align: center;
+    line-height: 30px;
+    cursor: pointer;
+    border: 1px solid #888;
+}
+
+.cell.bomb {
+    background-color: red;
+}
