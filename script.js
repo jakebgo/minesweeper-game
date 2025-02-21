@@ -1,23 +1,3 @@
-// Import Firebase modules (correct modular SDK import for v9+)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
-import { getDatabase, ref, push, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
-
-// Firebase configuration (replace with your actual configuration)
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);  // Initialize the Firebase app
-const database = getDatabase(app);  // Get the Firebase Realtime Database instance
-
 const boardSize = 10; // 10x10 grid
 const numBombs = 20;
 let board = [];
@@ -92,26 +72,29 @@ function calculateNeighbors() {
 
 // Render the board in the HTML
 function renderBoard() {
-    console.log("Rendering board...");
     const boardElement = document.getElementById("board");
     boardElement.innerHTML = ""; // Clear any existing content
     boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 30px)`; // Ensure grid size is dynamic based on boardSize
     boardElement.style.gridTemplateRows = `repeat(${boardSize}, 30px)`; // Ensure grid size is dynamic based on boardSize
 
-    // Loop through the board to create and render each cell
+    // Loop through the board and create cells
     for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
             const cell = document.createElement("div");
             cell.classList.add("cell");
             cell.dataset.row = i;
             cell.dataset.col = j;
+
+            // If the cell is revealed, show bomb or neighbor count
             if (board[i][j].isRevealed) {
                 if (board[i][j].isBomb) {
                     cell.classList.add("bomb");
+                    cell.innerText = "💣"; // Display bomb
                 } else {
                     cell.innerText = board[i][j].neighborBombs > 0 ? board[i][j].neighborBombs : "";
                 }
             }
+
             cell.addEventListener("click", revealCell);
             boardElement.appendChild(cell);
         }
@@ -130,14 +113,17 @@ function revealCell(event) {
 
     const row = event.target.dataset.row;
     const col = event.target.dataset.col;
-    if (board[row][col].isRevealed) return;
+
+    if (board[row][col].isRevealed) return; // Prevent revealing already revealed cells
+
     board[row][col].isRevealed = true;
 
+    // If a bomb is clicked, end the game
     if (board[row][col].isBomb) {
         gameOver = true;
-        stopTimer();  // Stop the timer when the game ends
+        stopTimer();
         alert("Game Over! You hit a bomb!");
-        // Don't add the score to the leaderboard if the player hits a bomb
+        renderBoard();
         return;
     }
 
@@ -149,7 +135,7 @@ function revealCell(event) {
         stopTimer();  // Stop the timer when the game ends successfully
         document.getElementById("completionMessage").innerText = "Congratulations! You completed the game!";
         alert("You completed the game!");
-        promptForLeaderboard();  // Add the score to the leaderboard when the game is completed
+        promptForLeaderboard();  // Save the score to the leaderboard
     }
 }
 
@@ -173,11 +159,11 @@ function promptForLeaderboard() {
     }
 }
 
-// Save the score to the leaderboard
+// Save the score to Firebase
 function saveScore(playerName, score) {
-    const leaderboardRef = ref(database, 'leaderboard'); // Reference to leaderboard in Firebase
+    const leaderboardRef = database.ref('leaderboard'); // Reference to leaderboard in Firebase
     
-    push(leaderboardRef, {
+    leaderboardRef.push({
         name: playerName,
         score: score,
         timestamp: Date.now() // To sort scores later
@@ -186,11 +172,9 @@ function saveScore(playerName, score) {
 
 // Load the leaderboard from Firebase
 function loadLeaderboard() {
-    const leaderboardRef = ref(database, 'leaderboard'); // Reference to leaderboard in Firebase
+    const leaderboardRef = database.ref('leaderboard'); // Reference to leaderboard in Firebase
 
-    const leaderboardQuery = query(leaderboardRef, orderByChild('score'), limitToLast(10));
-
-    get(leaderboardQuery).then((snapshot) => {
+    leaderboardRef.orderByChild('score').limitToLast(10).once('value', function(snapshot) {
         const leaderboardList = document.getElementById('scoreList');
         leaderboardList.innerHTML = ''; // Clear existing leaderboard
 
@@ -200,8 +184,6 @@ function loadLeaderboard() {
             listItem.textContent = `${scoreData.name}: ${scoreData.score} seconds`;
             leaderboardList.appendChild(listItem);
         });
-    }).catch((error) => {
-        console.error("Error loading leaderboard: ", error);
     });
 }
 

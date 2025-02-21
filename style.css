@@ -1,6 +1,7 @@
 #board {
     display: grid;
     margin-top: 20px;
+    background-color: #eaeaea;
 }
 
 .cell {
@@ -10,10 +11,17 @@
     border: 1px solid #ccc;
     text-align: center;
     line-height: 30px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cell.revealed {
+    background-color: white;
 }
 
 .bomb {
     background-color: red;
+    color: white;
 }
 
 .cell.revealed {
