@@ -112,19 +112,42 @@ function revealCell(event) {
     const col = event.target.dataset.col;
     if (board[row][col].isRevealed) return;
     board[row][col].isRevealed = true;
+
     if (board[row][col].isBomb) {
         gameOver = true;
         stopTimer();  // Stop the timer when the game ends
         alert("Game Over! You hit a bomb!");
-        promptForLeaderboard();  // Prompt for leaderboard when you lose
-    } else {
-        renderBoard();
+        // Don't add the score to the leaderboard if the player hits a bomb
+        return;
     }
+
+    renderBoard();
+
+    // Check if the player has completed the game
+    if (checkGameCompletion()) {
+        gameOver = true;
+        stopTimer();  // Stop the timer when the game ends successfully
+        document.getElementById("completionMessage").innerText = "Congratulations! You completed the game!";
+        alert("You completed the game!");
+        promptForLeaderboard();  // Add the score to the leaderboard when the game is completed
+    }
+}
+
+// Function to check if the game is completed (all non-bomb cells revealed)
+function checkGameCompletion() {
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+            if (!board[i][j].isBomb && !board[i][j].isRevealed) {
+                return false; // The game is not complete if there's any unrevealed non-bomb cell
+            }
+        }
+    }
+    return true; // All non-bomb cells are revealed, game is complete
 }
 
 // Prompt for name and save score to leaderboard
 function promptForLeaderboard() {
-    const playerName = prompt("Game Over! Enter your name to save your score:");
+    const playerName = prompt("Congratulations! Enter your name to save your score:");
     if (playerName) {
         saveScore(playerName, seconds);  // Save score with player name and time
     }
