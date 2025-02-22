@@ -1,5 +1,100 @@
-const boardSize = 10; // 10x10 grid
-const numBombs = 20; // Number of bombs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, push, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBvgcoRklnbChOGEKW2I7bSO6so396gn80",
+  authDomain: "minesweeper-game-f50f6.firebaseapp.com",
+  databaseURL: "https://minesweeper-game-f50f6-default-rtdb.firebaseio.com",
+  projectId: "minesweeper-game-f50f6",
+  storageBucket: "minesweeper-game-f50f6.firebasestorage.app",
+  messagingSenderId: "933417215645",
+  appId: "1:933417215645:web:f2ff3bdfea15ad850a9674"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+// Make the saveScore function global
+window.saveScore = function(playerName, score) {
+    const leaderboardRef = ref(database, 'leaderboard');
+
+    push(leaderboardRef, {
+        name: playerName,
+        score: score,
+        timestamp: Date.now()
+    }).then(() => {
+        console.log("Score uploaded successfully!");
+        loadLeaderboard(); // Refresh leaderboard after adding score
+    }).catch((error) => {
+        console.error("Error saving score: ", error);
+    });
+};
+
+
+// Function to load leaderboard
+function loadLeaderboard() {
+    const leaderboardRef = ref(database, 'leaderboard');
+    const leaderboardQuery = query(leaderboardRef, orderByChild('score'), limitToLast(10));
+
+    get(leaderboardQuery).then((snapshot) => {
+        const leaderboardList = document.getElementById('scoreList');
+        leaderboardList.innerHTML = ''; // Clear any existing leaderboard
+
+        snapshot.forEach((childSnapshot) => {
+            const scoreData = childSnapshot.val();
+            const listItem = document.createElement('li');
+            listItem.textContent = `${scoreData.name}: ${scoreData.score} seconds`;
+            leaderboardList.appendChild(listItem);
+        });
+    }).catch((error) => {
+        console.error("Error loading leaderboard: ", error);
+    });
+}
+
+// Function to prompt the user for their name and save the score to Firebase
+function promptForLeaderboard() {
+    const playerName = prompt("Enter your name to save your score:");
+
+    if (playerName) {
+        saveScore(playerName, seconds); // Save the score and name
+    } else {
+        alert("Name is required to save the score!");
+    }
+}
+
+// Check if all non-bomb cells are revealed
+function checkGameCompletion() {
+    let allNonBombCellsRevealed = true;
+
+    // Loop through the board to check if any non-bomb cell is unrevealed
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+            if (!board[i][j].isBomb && !board[i][j].isRevealed) {
+                allNonBombCellsRevealed = false;
+                break;
+            }
+        }
+    }
+
+    // If all non-bomb cells are revealed, end the game
+    if (allNonBombCellsRevealed) {
+        gameOver = true; // Mark the game as over
+        stopTimer(); // Stop the timer
+        alert("Congratulations! You have cleared all non-bomb cells!");
+
+        // Prompt for leaderboard entry
+        promptForLeaderboard();  // Now this function will be called correctly
+        renderBoard(); // Render the final board after completion
+    }
+}
+
+// Existing functions like saveScore, renderBoard, etc.
+
+
+const boardSize = 9; // 9x9 grid
+const numBombs = 10; // Number of bombs
 let board = [];
 let gameOver = false;
 let timerInterval;
@@ -13,7 +108,7 @@ function initializeBoard() {
     for (let i = 0; i < boardSize; i++) {
         board[i] = [];
         for (let j = 0; j < boardSize; j++) {
-            board[i][j] = { isBomb: false, isRevealed: false, neighborBombs: 0 };
+            board[i][j] = { isBomb: false, isRevealed: false, neighborBombs: 0, isFlagged: false };
         }
     }
     placeBombs(); // Place bombs on the board
@@ -56,7 +151,14 @@ function calculateNeighbors() {
 
 // Render the board in the HTML
 function renderBoard() {
+    console.log("Rendering board...");
+
     const boardElement = document.getElementById("board");
+    if (!boardElement) {
+        console.error("Board element not found!");
+        return;
+    }
+
     boardElement.innerHTML = ""; // Clear any existing content
     boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 30px)`; // Set grid layout
     boardElement.style.gridTemplateRows = `repeat(${boardSize}, 30px)`; // Set grid layout
@@ -80,8 +182,15 @@ function renderBoard() {
                 cell.classList.add("revealed");
             }
 
-            // Add click event listener to each cell
+            // Mark flagged cells with a different class
+            if (board[i][j].isFlagged) {
+                cell.classList.add("flagged");
+                cell.innerText = "🚩"; // Flag icon
+            }
+
+            // Add event listeners for click and right-click
             cell.addEventListener("click", revealCell);
+            cell.addEventListener("contextmenu", placePlanningMarker); // Right-click to place planning marker
 
             boardElement.appendChild(cell);
         }
@@ -94,6 +203,9 @@ function revealCell(event) {
 
     const row = event.target.dataset.row;
     const col = event.target.dataset.col;
+
+    // If the cell is flagged, prevent revealing it
+    if (board[row][col].isFlagged) return;
 
     // If the cell is already revealed, do nothing
     if (board[row][col].isRevealed) return;
@@ -116,30 +228,26 @@ function revealCell(event) {
         return;
     }
 
-    // If there are no neighboring bombs, reveal neighboring cells recursively
-    if (board[row][col].neighborBombs === 0) {
-        revealNeighbors(row, col); // Reveal adjacent cells if no bombs around
-    }
-
     renderBoard(); // Re-render the board after revealing the cell
+
+    // Check for game completion
+    checkGameCompletion(); // Ensure it checks after each cell reveal
 }
 
-// Recursively reveal neighboring cells
-function revealNeighbors(row, col) {
-    for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-            let newRow = row + x;
-            let newCol = col + y;
-            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
-                if (!board[newRow][newCol].isRevealed) {
-                    board[newRow][newCol].isRevealed = true;
-                    if (board[newRow][newCol].neighborBombs === 0) {
-                        revealNeighbors(newRow, newCol); // Recursively reveal neighbors if no bombs are adjacent
-                    }
-                }
-            }
-        }
-    }
+// Right-click to place planning marker (flag)
+function placePlanningMarker(event) {
+    event.preventDefault(); // Prevent the default right-click menu
+
+    const row = event.target.dataset.row;
+    const col = event.target.dataset.col;
+
+    // If the cell is already revealed or flagged, do nothing
+    if (board[row][col].isRevealed) return;
+
+    // Toggle the flag status
+    board[row][col].isFlagged = !board[row][col].isFlagged;
+
+    renderBoard(); // Re-render the board after placing/removing the flag
 }
 
 // Timer logic

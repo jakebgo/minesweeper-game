@@ -2,12 +2,16 @@
     display: grid;
     margin-top: 20px;
     background-color: #eaeaea;
+    max-width: calc(30px * 3); /* Adjust for the 3x3 grid size */
+    margin-left: auto;
+    margin-right: auto;
+    border: 2px solid #ccc; /* Optional: border for the whole board */
 }
 
 .cell {
     width: 30px;
     height: 30px;
-    background-color: lightgray; /* Unclicked cells */
+    background-color: #f0f0f0; /* Lighter gray for unrevealed cells */
     border: 1px solid #ccc;
     text-align: center;
     line-height: 30px;
@@ -17,11 +21,56 @@
 }
 
 .cell.revealed {
-    background-color: #d0d0d0; /* Darker shade for revealed cells */
+    background-color: #b0b0b0; /* Darker gray for revealed cells */
     cursor: default;
+}
+
+.cell.unclicked {
+    background-color: #f0f0f0; /* Lighter shade for unclicked cells */
+}
+
+.bomb {
+    background-color: red;
+    color: white;
 }
 
 /* Optional: add a hover effect to make it more interactive */
 .cell:hover {
-    background-color: #b3b3b3;
+    background-color: #d3d3d3; /* Slightly darker on hover */
+}
+
+/* Leaderboard Styling */
+#scoreList {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+#scoreList li {
+    font-size: 18px;
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#scoreList li:nth-child(odd) {
+    background-color: #e2e2e2;
+}
+
+/* Add a header for the leaderboard */
+h2 {
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+@media (max-width: 600px) {
+    #board {
+        grid-template-columns: repeat(5, 30px); /* Reduce columns for smaller screen */
+        grid-template-rows: repeat(5, 30px); /* Adjust rows for smaller screen */
+    }
 }
