@@ -1,32 +1,58 @@
+/* General layout settings */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Vertically center the content */
+    flex-direction: column;
+    margin: 0;
+    height: 100vh; /* Take up the full height of the screen */
+    background-color: #fff;
+    text-align: center; /* Center text inside the body */
+}
+
+#minesweeper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 20px;
+    width: 100%; /* Ensure it takes up full width */
+    max-width: 600px; /* Optional: Add a maximum width for better control */
+}
+
 #board {
     display: grid;
     margin-top: 20px;
-    background-color: #eaeaea;
-    max-width: calc(30px * 3); /* Adjust for the 3x3 grid size */
+    background-color: #fff; /* Make the board background white */
+    border: 2px solid #ccc;
+    max-width: 30px * 3; /* Adjust for the 3x3 grid size */
     margin-left: auto;
     margin-right: auto;
-    border: 2px solid #ccc; /* Optional: border for the whole board */
+    grid-template-columns: repeat(3, 30px); /* 3 columns for 3x3 grid */
+    grid-template-rows: repeat(3, 30px); /* 3 rows for 3x3 grid */
 }
 
 .cell {
     width: 30px;
     height: 30px;
-    background-color: #f0f0f0; /* Lighter gray for unrevealed cells */
+    background-color: #f0f0f0;
     border: 1px solid #ccc;
     text-align: center;
     line-height: 30px;
     cursor: pointer;
     user-select: none;
-    transition: background-color 0.3s ease; /* Smooth transition for hover and click effects */
+    transition: background-color 0.3s ease;
 }
 
 .cell.revealed {
-    background-color: #b0b0b0; /* Darker gray for revealed cells */
+    background-color: #b0b0b0;
     cursor: default;
 }
 
 .cell.unclicked {
-    background-color: #f0f0f0; /* Lighter shade for unclicked cells */
+    background-color: #f0f0f0;
 }
 
 .bomb {
@@ -34,17 +60,30 @@
     color: white;
 }
 
-/* Optional: add a hover effect to make it more interactive */
 .cell:hover {
-    background-color: #d3d3d3; /* Slightly darker on hover */
+    background-color: #d3d3d3;
 }
 
-/* Leaderboard Styling */
+/* Timer and Reset Button */
+#info {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Leaderboard Section */
+#leaderboard-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
 #scoreList {
     list-style-type: none;
     padding: 0;
-    margin-top: 20px;
+    margin-top: 0;
     font-family: Arial, sans-serif;
+    text-align: left;
 }
 
 #scoreList li {
@@ -62,15 +101,16 @@
     background-color: #e2e2e2;
 }
 
-/* Add a header for the leaderboard */
-h2 {
+#leaderboard-container h2 {
     font-family: Arial, sans-serif;
     color: #333;
+    margin-right: 20px;
+    margin-top: 0;
 }
 
 @media (max-width: 600px) {
     #board {
-        grid-template-columns: repeat(5, 30px); /* Reduce columns for smaller screen */
-        grid-template-rows: repeat(5, 30px); /* Adjust rows for smaller screen */
+        grid-template-columns: repeat(5, 30px);
+        grid-template-rows: repeat(5, 30px);
     }
 }

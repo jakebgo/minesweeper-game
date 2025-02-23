@@ -16,24 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Make the saveScore function global
-window.saveScore = function(playerName, score) {
-    const leaderboardRef = ref(database, 'leaderboard');
-
-    push(leaderboardRef, {
-        name: playerName,
-        score: score,
-        timestamp: Date.now()
-    }).then(() => {
-        console.log("Score uploaded successfully!");
-        loadLeaderboard(); // Refresh leaderboard after adding score
-    }).catch((error) => {
-        console.error("Error saving score: ", error);
-    });
-};
-
-
-// Function to load leaderboard
+// Function to load leaderboard immediately
 function loadLeaderboard() {
     const leaderboardRef = ref(database, 'leaderboard');
     const leaderboardQuery = query(leaderboardRef, orderByChild('score'), limitToLast(10));
@@ -52,6 +35,11 @@ function loadLeaderboard() {
         console.error("Error loading leaderboard: ", error);
     });
 }
+
+// Load the leaderboard when the page is ready
+window.onload = function() {
+    loadLeaderboard();
+};
 
 // Function to prompt the user for their name and save the score to Firebase
 function promptForLeaderboard() {
