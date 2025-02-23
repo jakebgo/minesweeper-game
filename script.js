@@ -16,6 +16,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// Function to save score to Firebase
+function saveScore(playerName, score) {
+    const leaderboardRef = ref(database, 'leaderboard');
+    push(leaderboardRef, {
+        name: playerName,
+        score: score,
+        timestamp: Date.now()
+    }).then(() => {
+        console.log("Score uploaded successfully!");
+         loadLeaderboard(); // Refresh leaderboard after adding score
+    }).catch((error) => {
+        console.error("Error saving score: ", error);
+     });
+}
+    
+    // Make saveScore globally accessible
+    window.saveScore = saveScore;
 // Function to load leaderboard immediately
 function loadLeaderboard() {
     const leaderboardRef = ref(database, 'leaderboard');
@@ -218,23 +235,6 @@ function revealCell(event) {
 
     renderBoard(); // Re-render the board after revealing the cell
 
-    // Function to save score to Firebase
-function saveScore(playerName, score) {
-    const leaderboardRef = ref(database, 'leaderboard'); // Reference to the leaderboard
-
-    push(leaderboardRef, {
-        name: playerName,
-        score: score,
-        timestamp: Date.now()
-    }).then(() => {
-        console.log("Score uploaded successfully!");
-        loadLeaderboard(); // Refresh leaderboard after adding score
-    }).catch((error) => {
-        console.error("Error saving score: ", error);
-    });
-}
-
-
     // Check for game completion
     checkGameCompletion(); // Ensure it checks after each cell reveal
 }
@@ -279,3 +279,4 @@ document.getElementById("reset").addEventListener("click", () => {
 
 // Initialize the game
 initializeBoard();
+
